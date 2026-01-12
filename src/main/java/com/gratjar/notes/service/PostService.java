@@ -20,16 +20,19 @@ public class PostService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<Post> getAllPosts() {
-        return postRepository.findAll();
+    public User getUser(String username) {
+        return userRepository.findByUsername(username);
     }
 
-    public Optional<Post> getPostById(Long id) {
-        return postRepository.findById(id);
+    public List<Post> getAllPosts(User user) {
+        return postRepository.findAllByUser(user);
     }
 
-    public Post createPost(Post post, String username) {
-        User user = userRepository.findByUsername(username);
+    public Optional<Post> getPostById(Long id, User user) {
+        return postRepository.findByUserAndId(user, id);
+    }
+
+    public Post createPost(Post post, User user) {
         post.setUser(user);
         return postRepository.save(post);
     }
