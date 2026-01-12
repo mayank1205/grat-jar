@@ -4,6 +4,11 @@ import com.gratjar.notes.PostMapper;
 import com.gratjar.notes.entity.Post;
 import com.gratjar.notes.model.PostDTO;
 import com.gratjar.notes.service.PostService;
+import com.gratjar.notes.util.JwtUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,11 +18,11 @@ import java.util.List;
 @RequestMapping("/posts")
 public class PostController {
 
-    private final PostService postService;
+    @Autowired
+    private PostService postService;
 
-    public PostController(PostService postService) {
-        this.postService = postService;
-    }
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @GetMapping
     public ResponseEntity<List<PostDTO>> getAllPosts() {
@@ -25,8 +30,18 @@ public class PostController {
     }
 
     @PostMapping
-    public ResponseEntity<PostDTO> createPost(@RequestBody Post post) {
-        Post savedPost = postService.createPost(post);
+    public ResponseEntity<PostDTO> createPost(HttpServletRequest request, @RequestBody Post post) {
+        
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        }
+
+        // Use JwtUtil to extract username
+        String username = jwtUtil.extractUsername(token);
+        
+        Post savedPost = postService.createPost(post, username);
         return ResponseEntity.status(201).body(PostMapper.toPostDTO(savedPost));
     }
 

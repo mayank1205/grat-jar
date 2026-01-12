@@ -1,7 +1,11 @@
 package com.gratjar.notes.service;
 
 import com.gratjar.notes.entity.Post;
+import com.gratjar.notes.entity.User;
 import com.gratjar.notes.repository.PostRepository;
+import com.gratjar.notes.repository.UserRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,11 +14,11 @@ import java.util.Optional;
 @Service
 public class PostService {
 
-    private final PostRepository postRepository;
+    @Autowired
+    private PostRepository postRepository;
 
-    public PostService(PostRepository postRepository) {
-        this.postRepository = postRepository;
-    }
+    @Autowired
+    private UserRepository userRepository;
 
     public List<Post> getAllPosts() {
         return postRepository.findAll();
@@ -24,7 +28,9 @@ public class PostService {
         return postRepository.findById(id);
     }
 
-    public Post createPost(Post post) {
+    public Post createPost(Post post, String username) {
+        User user = userRepository.findByUsername(username);
+        post.setUser(user);
         return postRepository.save(post);
     }
 
