@@ -2,10 +2,9 @@ package com.gratjar.notes.controller;
 
 import com.gratjar.notes.PostMapper;
 import com.gratjar.notes.entity.Post;
-import com.gratjar.notes.entity.User;
 import com.gratjar.notes.model.PostDTO;
 import com.gratjar.notes.service.PostService;
-import com.gratjar.notes.util.JwtUtil;
+import com.gratjar.notes.util.Util;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -23,33 +22,23 @@ public class PostController {
     private PostService postService;
 
     @Autowired
-    private JwtUtil jwtUtil;
-
-    private User getUser(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        String token = null;
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
-        }
-
-        return postService.getUser(jwtUtil.extractUsername(token));
-    }
+    private Util util;
 
     @GetMapping
     public ResponseEntity<List<PostDTO>> getAllPosts(HttpServletRequest request) {
-        return ResponseEntity.ok(postService.getAllPosts(getUser(request)).stream().map(post -> PostMapper.toPostDTO(post)).toList());
+        return ResponseEntity.ok(postService.getAllPosts(util.getUser(request)).stream().map(post -> PostMapper.toPostDTO(post)).toList());
     }
 
     @PostMapping
     public ResponseEntity<PostDTO> createPost(HttpServletRequest request, @RequestBody Post post) {
         
-        Post savedPost = postService.createPost(post, getUser(request));
+        Post savedPost = postService.createPost(post, util.getUser(request));
         return ResponseEntity.status(201).body(PostMapper.toPostDTO(savedPost));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<PostDTO> getPost(HttpServletRequest request, @PathVariable Long id) {
-        return postService.getPostById(id, getUser(request)).map(post-> PostMapper.toPostDTO(post))
+        return postService.getPostById(id, util.getUser(request)).map(post-> PostMapper.toPostDTO(post))
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -62,4 +51,5 @@ public class PostController {
         }
         return ResponseEntity.notFound().build();
     }
+
 }
