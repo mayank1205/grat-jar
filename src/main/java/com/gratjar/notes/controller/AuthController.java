@@ -1,6 +1,9 @@
 package com.gratjar.notes.controller;
 
 import com.gratjar.notes.entity.User;
+import com.gratjar.notes.exception.ResourceNotFoundException;
+import com.gratjar.notes.exception.UnauthorizedException;
+import com.gratjar.notes.exception.UserAlreadyExistsException;
 import com.gratjar.notes.model.ResponseModel;
 import com.gratjar.notes.model.UserDTO;
 import com.gratjar.notes.repository.UserRepository;
@@ -30,20 +33,24 @@ public class AuthController {
         String password = userDto.getPassword();
         User user = userRepository.findByUsername(username);
 
+        if(user == null) {
+            throw new ResourceNotFoundException("User not found");
+        }
+
         if (user.getUsername().equals(username) && passwordEncoder.matches(password, user.getPassword())) {
             ResponseModel response = new ResponseModel();
             response.setMessage("Login Successful");
             response.setStatus(200);
             return ResponseEntity.ok().header("Authorization", jwtUtil.generateToken(username)).body(response);
         }
-        throw new RuntimeException("Invalid credentials");
+        throw new UnauthorizedException("Invalid credentials");
     }
 
     @PostMapping("/signup")
     public ResponseEntity<ResponseModel> signup(@RequestBody UserDTO userDto) {
         User user = userRepository.findByUsername(userDto.getUsername());
         if(user != null) {
-            throw new RuntimeException("User already exists!");
+            throw new UserAlreadyExistsException("User already exists!");
         }
         String encodedPassword = passwordEncoder.encode(userDto.getPassword());
         ResponseModel response = new ResponseModel();
